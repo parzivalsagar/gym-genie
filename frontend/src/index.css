@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+@theme {
+  --color-dark-950: #050810;
+  --color-dark-900: #0a0f1a;
+  --color-dark-800: #111827;
+  --color-dark-700: #1a2236;
+  --color-dark-600: #243049;
+  --color-dark-500: #374b6d;
+  --color-dark-400: #5a7199;
+  --color-dark-300: #8899b3;
+  --color-dark-200: #b3c0d4;
+  --color-dark-100: #dde3ed;
+
+  --color-accent: #10b981;
+  --color-accent-hover: #059669;
+  --color-accent-light: #34d399;
+  --color-accent-muted: #10b98120;
+
+  --color-surface: #0f1629;
+  --color-surface-raised: #161f35;
+
+  --color-border: #1e293b;
+
+  --color-red: #ef4444;
+
+  --font-heading: "Bebas Neue", sans-serif;
+  --font-body: "Inter", sans-serif;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--color-dark-900);
+  color: var(--color-dark-100);
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+#root { min-height: 100vh; display: flex; flex-direction: column; }
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  letter-spacing: 0.08em;
+  line-height: 1.1;
+}
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--color-dark-950); }
+::-webkit-scrollbar-thumb { background: var(--color-accent); border-radius: 10px; }
+
+select option { background-color: var(--color-dark-800); color: var(--color-dark-100); }
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+.animate-fade-up { animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.animate-fade-in { animation: fadeIn 0.4s ease-out both; }
+
+@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+.animate-shimmer {
+  background: linear-gradient(90deg, var(--color-dark-800) 25%, var(--color-dark-700) 50%, var(--color-dark-800) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.15); }
+  50% { box-shadow: 0 0 40px rgba(16, 185, 129, 0.3); }
+}
+.animate-pulse-glow { animation: pulseGlow 3s ease-in-out infinite; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.animate-spin { animation: spin 0.8s linear infinite; }
+
+.line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+.line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }

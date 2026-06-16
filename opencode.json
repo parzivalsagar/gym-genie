@@ -1,0 +1,13 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "MongoDB": {
+      "type": "local",
+      "command": ["npx", "-y", "mongodb-mcp-server@latest"],
+      "environment": {
+        "MDB_MCP_CONNECTION_STRING": "mongodb+srv://smsagarj3008_db_user:PnGLuVPYxsz2RfGc@cluster0.da865pz.mongodb.net/gymgenie?retryWrites=true&w=majority&appName=Cluster0"
+      },
+      "enabled": true
+    }
+  }
+}

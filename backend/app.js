@@ -1,14 +1,6 @@
-const dns = require('dns');
-dns.setServers(['8.8.8.8', '8.8.4.4']);
-
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const dotenv = require('dotenv');
-
-dotenv.config();
-
-const connectDB = require('./config/db');
 const productRoutes = require('./routes/products');
 const cartRoutes = require('./routes/cart');
 const orderRoutes = require('./routes/orders');
@@ -23,49 +15,36 @@ app.use(express.json({ limit: '10mb' }));
 
 let cached = null;
 
-const ensureDB = async () => {
+const connectDB = async () => {
   if (cached) return cached;
-  cached = await connectDB();
+  cached = await mongoose.connect(process.env.MONGODB_URI, {
+    serverSelectionTimeoutMS: 10000,
+    connectTimeoutMS: 10000,
+  });
   return cached;
 };
 
-app.get('/api/health', async (req, res) => {
-  await ensureDB();
-  res.json({ status: 'ok' });
-});
-
-app.use('/api/products', async (req, res, next) => {
-  await ensureDB();
-  productRoutes(req, res, next);
-});
-app.use('/api/cart', async (req, res, next) => {
-  await ensureDB();
-  cartRoutes(req, res, next);
-});
-app.use('/api/orders', async (req, res, next) => {
-  await ensureDB();
-  orderRoutes(req, res, next);
-});
-app.use('/api/reviews', async (req, res, next) => {
-  await ensureDB();
-  reviewRoutes(req, res, next);
-});
-app.use('/api/chat', async (req, res, next) => {
-  await ensureDB();
-  chatRoutes(req, res, next);
-});
-app.use('/api/admin', async (req, res, next) => {
-  await ensureDB();
-  adminRoutes(req, res, next);
-});
-app.use('/api/upload', async (req, res, next) => {
-  await ensureDB();
-  uploadRoutes(req, res, next);
-});
-
-app.post('/api/sync-user', async (req, res) => {
+const ensureDB = async (req, res, next) => {
   try {
-    await ensureDB();
+    await connectDB();
+    next();
+  } catch (error) {
+    res.status(500).json({ error: 'Database connection failed' });
+  }
+};
+
+app.get('/api/health', ensureDB, (req, res) => res.json({ status: 'ok' }));
+
+app.use('/api/products', ensureDB, productRoutes);
+app.use('/api/cart', ensureDB, cartRoutes);
+app.use('/api/orders', ensureDB, orderRoutes);
+app.use('/api/reviews', ensureDB, reviewRoutes);
+app.use('/api/chat', ensureDB, chatRoutes);
+app.use('/api/admin', ensureDB, adminRoutes);
+app.use('/api/upload', ensureDB, uploadRoutes);
+
+app.post('/api/sync-user', ensureDB, async (req, res) => {
+  try {
     const User = require('./models/User');
     const { clerkId, name, email, avatar } = req.body;
     let user = await User.findOne({ clerkId });

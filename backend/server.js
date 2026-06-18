@@ -1,6 +1,9 @@
-const app = require('./app');
+const dns = require('dns');
+dns.setServers(['8.8.8.8', '8.8.4.4']);
+
 const http = require('http');
 const { Server } = require('socket.io');
+const app = require('./app');
 
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });

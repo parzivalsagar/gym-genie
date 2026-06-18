@@ -8,14 +8,31 @@ import './index.css';
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
+function Root() {
+  const content = (
     <BrowserRouter>
-      <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
-        <AuthSync>
-          <App />
-        </AuthSync>
-      </ClerkProvider>
+      <AuthSync>
+        <App />
+      </AuthSync>
     </BrowserRouter>
-  </React.StrictMode>
-);
+  );
+
+  if (!PUBLISHABLE_KEY) {
+    console.warn('Missing VITE_CLERK_PUBLISHABLE_KEY — running without auth');
+    return <React.StrictMode>{content}</React.StrictMode>;
+  }
+
+  return (
+    <React.StrictMode>
+      <BrowserRouter>
+        <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
+          <AuthSync>
+            <App />
+          </AuthSync>
+        </ClerkProvider>
+      </BrowserRouter>
+    </React.StrictMode>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<Root />);

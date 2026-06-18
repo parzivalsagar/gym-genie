@@ -1,8 +1,22 @@
-import { useEffect } from 'react';
+import { useEffect, Component } from 'react';
 import { useAuth, useUser } from '@clerk/clerk-react';
 import api, { setAuthToken } from '../api/axios';
 
-export default function AuthSync({ children }) {
+class AuthErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  render() {
+    if (this.state.hasError) return this.props.children;
+    return this.props.content;
+  }
+}
+
+function AuthSyncInner({ children }) {
   const { getToken } = useAuth();
   const { isSignedIn, user } = useUser();
 
@@ -32,4 +46,10 @@ export default function AuthSync({ children }) {
   }, [isSignedIn, user]);
 
   return children;
+}
+
+export default function AuthSync({ children }) {
+  return (
+    <AuthErrorBoundary children={children} content={<AuthSyncInner>{children}</AuthSyncInner>} />
+  );
 }

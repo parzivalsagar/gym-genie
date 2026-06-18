@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useUser } from '@clerk/clerk-react';
 import api from '../api/axios';
 
 const categories = ['Dumbbells','Barbells','Weight Plates','Kettlebells','Benches','Treadmills','Exercise Bikes','Resistance Bands','Home Gym Systems','Accessories'];
 
 function ProductsPage() {
+  const { user } = useUser();
   const [products, setProducts] = useState([]);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('');
@@ -23,29 +25,46 @@ function ProductsPage() {
       .finally(() => setLoading(false));
   }, [search, category, sort]);
 
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this product?')) return;
+    try {
+      await api.delete(`/products/${id}`);
+      setProducts(products.filter(p => p._id !== id));
+    } catch (err) { console.error(err); }
+  };
+
   const ProductCard = ({ product }) => (
-    <Link to={`/products/${product._id}`} className="bg-surface border border-border rounded-xl overflow-hidden flex flex-col group hover:border-border-light hover:-translate-y-0.5 transition-all duration-200">
-      <div className="relative h-44 sm:h-48 bg-dark-800 overflow-hidden">
-        {product.images?.[0] ? (
-          <img src={product.images[0]} alt={product.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
-        ) : null}
-        <div className={`w-full h-full flex flex-col items-center justify-center text-dark-500 ${product.images?.[0] ? 'hidden' : 'flex'}`}>
-          <svg className="w-10 h-10 mb-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+    <div className="bg-surface border border-border rounded-xl overflow-hidden flex flex-col group hover:border-border-light hover:-translate-y-0.5 transition-all duration-200 relative">
+      {user && product.sellerId && (user.id === product.sellerId.clerkId || product.sellerId.clerkId === user.id) && (
+        <button onClick={(e) => { e.preventDefault(); handleDelete(product._id); }} className="absolute top-3 left-3 z-10 p-1.5 bg-red-500/90 text-white rounded-lg hover:bg-red-500 transition-all opacity-0 group-hover:opacity-100" title="Delete product">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
           </svg>
-          <span className="text-[11px]">No Image</span>
+        </button>
+      )}
+      <Link to={`/products/${product._id}`} className="flex flex-col flex-1">
+        <div className="relative h-44 sm:h-48 bg-dark-800 overflow-hidden">
+          {product.images?.[0] ? (
+            <img src={product.images[0]} alt={product.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
+          ) : null}
+          <div className={`w-full h-full flex flex-col items-center justify-center text-dark-500 ${product.images?.[0] ? 'hidden' : 'flex'}`}>
+            <svg className="w-10 h-10 mb-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span className="text-[11px]">No Image</span>
+          </div>
+          <span className="absolute top-3 right-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-accent/90 text-white backdrop-blur-sm">{product.condition}</span>
         </div>
-        <span className="absolute top-3 right-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-accent/90 text-white backdrop-blur-sm">{product.condition}</span>
-      </div>
-      <div className="p-4 flex flex-col flex-1">
-        <h3 className="font-semibold text-white text-sm group-hover:text-accent transition-colors line-clamp-1">{product.title}</h3>
-        <p className="text-[12px] text-dark-400 mt-1 line-clamp-2 flex-1 leading-relaxed">{product.description}</p>
-        <div className="mt-3 pt-3 border-t border-border flex items-end justify-between">
-          <p className="text-accent font-bold text-[15px]">₹{product.price.toLocaleString('en-IN')}</p>
-          <p className="text-[11px] text-dark-500">{product.category}</p>
+        <div className="p-4 flex flex-col flex-1">
+          <h3 className="font-semibold text-white text-sm group-hover:text-accent transition-colors line-clamp-1">{product.title}</h3>
+          <p className="text-[12px] text-dark-400 mt-1 line-clamp-2 flex-1 leading-relaxed">{product.description}</p>
+          <div className="mt-3 pt-3 border-t border-border flex items-end justify-between">
+            <p className="text-accent font-bold text-[15px]">₹{product.price.toLocaleString('en-IN')}</p>
+            <p className="text-[11px] text-dark-500">{product.category}</p>
+          </div>
         </div>
-      </div>
-    </Link>
+      </Link>
+    </div>
   );
 
   const SkeletonCard = () => (

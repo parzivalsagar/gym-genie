@@ -20,7 +20,7 @@ router.get('/', async (req, res) => {
     if (sort === 'price_asc') sortOption.price = 1;
     else if (sort === 'price_desc') sortOption.price = -1;
     else sortOption.createdAt = -1;
-    const products = await Product.find(filter).sort(sortOption);
+    const products = await Product.find(filter).sort(sortOption).populate('sellerId', 'clerkId');
     res.json(products);
   } catch (error) {
     res.status(500).json({ error: error.message });

@@ -48,8 +48,8 @@ async function seed() {
     if (!seller) {
       seller = await User.create({
         clerkId: 'demo_seller',
-        name: 'GymGear Store',
-        email: 'store@gymgear.com',
+        name: 'Gym-Genie Store',
+        email: 'store@gym-genie.com',
         role: 'seller',
         location: 'Mumbai',
       });

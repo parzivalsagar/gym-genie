@@ -52,7 +52,7 @@ function Navbar() {
                 </svg>
               </div>
               <span className="text-xl font-bold tracking-wider hidden sm:block" style={{ fontFamily: 'var(--font-heading)' }}>
-                GYM<span className="text-accent">GEAR</span>
+                GYM-<span className="text-accent">GENIE</span>
               </span>
             </Link>
 

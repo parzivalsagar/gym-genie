@@ -1,4 +1,4 @@
-# GymGear Marketplace — Project Guide
+# Gym-Genie Marketplace — Project Guide
 
 ## Tech Stack
 - **Frontend**: React + Vite + Tailwind CSS v4 + React Router + Axios + Clerk

@@ -14,7 +14,7 @@ function SignInPage() {
           </svg>
         </div>
         <h1 className="text-3xl font-bold text-white" style={{ fontFamily: 'var(--font-heading)' }}>WELCOME <span className="text-accent">BACK</span></h1>
-        <p className="text-dark-400 text-sm mt-1">Sign in to your GymGear account</p>
+        <p className="text-dark-400 text-sm mt-1">Sign in to your Gym-Genie account</p>
       </div>
       <div className="bg-surface border border-border rounded-xl p-5 sm:p-6">
         <SignIn routing="path" path="/sign-in" signUpUrl="/sign-up" afterSignInUrl="/" />

@@ -44,7 +44,7 @@ function Footer() {
           <div>
             <h4 className="text-xs font-semibold text-dark-300 uppercase tracking-widest mb-5" style={{ fontFamily: 'var(--font-heading)' }}>Support</h4>
             <ul className="space-y-3">
-              <li><span className="text-sm text-dark-400">support@gymgear.in</span></li>
+              <li><span className="text-sm text-dark-400">support@gym-genie.in</span></li>
               <li><span className="text-sm text-dark-400">+91 98765 43210</span></li>
               <li><span className="text-sm text-dark-400">Mon — Sat, 9AM — 6PM</span></li>
             </ul>
@@ -52,7 +52,7 @@ function Footer() {
         </div>
 
         <div className="mt-12 pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-dark-500 text-xs">&copy; 2026 GymGear. All rights reserved.</p>
+          <p className="text-dark-500 text-xs">&copy; 2026 Gym-Genie. All rights reserved.</p>
           <div className="flex items-center gap-1.5 text-dark-500 text-xs">
             Built with <span className="text-accent mx-0.5">&#9829;</span> for fitness enthusiasts
           </div>

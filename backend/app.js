@@ -1,6 +1,12 @@
+const dns = require('dns');
+dns.setServers(['8.8.8.8', '8.8.4.4']);
+
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const dotenv = require('dotenv');
+dotenv.config();
+
 const productRoutes = require('./routes/products');
 const cartRoutes = require('./routes/cart');
 const orderRoutes = require('./routes/orders');
@@ -13,37 +19,31 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
-let cached = null;
+let dbReady = null;
 
-const connectDB = async () => {
-  if (cached) return cached;
-  cached = await mongoose.connect(process.env.MONGODB_URI, {
-    serverSelectionTimeoutMS: 10000,
-    connectTimeoutMS: 10000,
-  });
-  return cached;
-};
-
-const ensureDB = async (req, res, next) => {
-  try {
-    await connectDB();
-    next();
-  } catch (error) {
-    res.status(500).json({ error: 'Database connection failed' });
+const connectDB = () => {
+  if (!dbReady) {
+    dbReady = mongoose.connect(process.env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 10000,
+      connectTimeoutMS: 10000,
+    });
   }
+  return dbReady;
 };
 
-app.get('/api/health', ensureDB, (req, res) => res.json({ status: 'ok' }));
+connectDB().catch(err => console.error('DB connection error:', err.message));
 
-app.use('/api/products', ensureDB, productRoutes);
-app.use('/api/cart', ensureDB, cartRoutes);
-app.use('/api/orders', ensureDB, orderRoutes);
-app.use('/api/reviews', ensureDB, reviewRoutes);
-app.use('/api/chat', ensureDB, chatRoutes);
-app.use('/api/admin', ensureDB, adminRoutes);
-app.use('/api/upload', ensureDB, uploadRoutes);
+app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
-app.post('/api/sync-user', ensureDB, async (req, res) => {
+app.use('/api/products', productRoutes);
+app.use('/api/cart', cartRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/chat', chatRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/upload', uploadRoutes);
+
+app.post('/api/sync-user', async (req, res) => {
   try {
     const User = require('./models/User');
     const { clerkId, name, email, avatar } = req.body;

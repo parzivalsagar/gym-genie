@@ -11,6 +11,7 @@ function CartPage() {
   const [orderTotal, setOrderTotal] = useState(0);
 
   useEffect(() => {
+<<<<<<< HEAD
     if (!isSignedIn) {
       setLoading(false);
       return;
@@ -22,6 +23,30 @@ function CartPage() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [isSignedIn]);
+=======
+  if (!isSignedIn) {
+    setLoading(false);
+    return;
+  }
+
+  // If order was placed, keep cart empty
+  if (localStorage.getItem("cartCleared") === "true") {
+    setCart({ items: [] });
+    setLoading(false);
+    return;
+  }
+
+  api
+    .get("/cart")
+    .then((res) => {
+      setCart(res.data);
+    })
+    .catch(() => {
+      setCart({ items: [] });
+    })
+    .finally(() => setLoading(false));
+}, [isSignedIn]);
+>>>>>>> e2318f6 (Initial commit)
 
   const removeItem = async (productId) => {
     try {
@@ -41,10 +66,22 @@ function CartPage() {
   );
 
   const handlePlaceOrder = () => {
+<<<<<<< HEAD
     setOrderTotal(total);
     setCart({ items: [] });
     setShowOrderSuccess(true);
   };
+=======
+  setOrderTotal(total);
+
+  // Clear cart permanently in frontend
+  localStorage.setItem("cartCleared", "true");
+
+  setCart({ items: [] });
+
+  setShowOrderSuccess(true);
+};
+>>>>>>> e2318f6 (Initial commit)
 
   if (!isSignedIn) {
     return (

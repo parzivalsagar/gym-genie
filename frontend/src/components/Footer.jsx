@@ -46,7 +46,6 @@ function Footer() {
             <ul className="space-y-3">
               <li><span className="text-sm text-dark-400">support@gym-genie.in</span></li>
               <li><span className="text-sm text-dark-400">+91 98765 43210</span></li>
-              <li><span className="text-sm text-dark-400">Mon — Sat, 9AM — 6PM</span></li>
             </ul>
           </div>
         </div>

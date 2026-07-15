@@ -1,128 +1,179 @@
-import { useState, useEffect, useRef } from "react";
 import { useUser } from "@clerk/clerk-react";
+import { useEffect, useRef, useState } from "react";
+import api from "../api/axios";
 
 function ChatPage() {
   const { isSignedIn, user } = useUser();
-
   const [messages, setMessages] = useState([
     {
       senderId: "AI",
-      message:
-        "👋 Welcome to Gym Genie AI! Ask me about workouts, nutrition, gym equipment, fitness tips, or weight loss.",
+      message: "👋 Welcome to **Gym Genie AI**! I'm your personal fitness assistant. I can help you with:\n\n✅ **Diet Plans** - Weight loss, muscle gain, maintenance\n✅ **Equipment Recommendations** - Home gym, beginner, advanced\n✅ **Workout Routines** - For all fitness levels\n✅ **Nutrition Advice** - Macros, supplements, meal timing\n✅ **Fitness Tips** - Recovery, cardio, strength training\n\n**What can I help you with today?** 💪",
       createdAt: new Date(),
+      type: "text"
     },
   ]);
 
   const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({
-      behavior: "smooth",
-    });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const sendMessage = () => {
-    if (!input.trim()) return;
+  const sendMessage = async () => {
+    if (!input.trim() || loading) return;
 
     const userMessage = {
       senderId: user?.id,
       message: input,
       createdAt: new Date(),
+      type: "text"
     };
 
     setMessages((prev) => [...prev, userMessage]);
-
-    const question = input.toLowerCase();
-
+    const userInput = input;
     setInput("");
+    setLoading(true);
 
-    setTimeout(() => {
-      let reply = "";
-
-      if (
-        question.includes("hello") ||
-        question.includes("hi") ||
-        question.includes("hey")
-      ) {
-        reply =
-          "👋 Hello! I'm Gym Genie AI. How can I help with your fitness journey today?";
-      } else if (question.includes("protein")) {
-        reply =
-          "💪 Protein helps build and repair muscles. Aim for 1.6-2.2g per kg of body weight daily.";
-      } else if (
-        question.includes("weight loss") ||
-        question.includes("lose weight")
-      ) {
-        reply =
-          "🔥 For weight loss, maintain a calorie deficit, eat high-protein meals, and stay active.";
-      } else if (
-        question.includes("gain muscle") ||
-        question.includes("muscle")
-      ) {
-        reply =
-          "🏋️ To gain muscle, follow progressive overload, eat enough protein, and get proper sleep.";
-      } else if (question.includes("bench press")) {
-        reply =
-          "🏋️ Bench press mainly targets your chest, shoulders, and triceps.";
-      } else if (question.includes("squat")) {
-        reply =
-          "🦵 Squats work your quadriceps, glutes, hamstrings, and core muscles.";
-      } else if (
-        question.includes("cardio") ||
-        question.includes("running")
-      ) {
-        reply =
-          "🏃 Cardio improves heart health, burns calories, and increases endurance.";
-      } else if (question.includes("creatine")) {
-        reply =
-          "⚡ Creatine is one of the most researched supplements and can improve strength and performance.";
-      } else if (
-        question.includes("equipment") ||
-        question.includes("gym equipment")
-      ) {
-        reply =
-          "🏋️ Popular gym equipment includes dumbbells, barbells, benches, squat racks, and treadmills.";
-      } else if (
-        question.includes("diet") ||
-        question.includes("nutrition")
-      ) {
-        reply =
-          "🥗 Focus on whole foods, adequate protein, healthy fats, fruits, vegetables, and hydration.";
-      } else {
-        reply =
-          "🤖 I'm Gym Genie AI. I can help with workouts, fitness plans, nutrition, gym equipment, muscle gain, and weight loss.";
+    try {
+      console.log("Sending message:", userInput);
+      const res = await api.post("/ai/chat", { message: userInput });
+      
+      console.log("Response:", res.data);
+      
+      const aiMessage = res.data;
+      
+      if (!aiMessage || !aiMessage.message) {
+        throw new Error('Invalid response from server');
       }
-
-      const aiMessage = {
+      
+      // Check if response is JSON (diet plan or equipment)
+      try {
+        const parsed = JSON.parse(aiMessage.message);
+        console.log("Parsed JSON response:", parsed);
+        setMessages((prev) => [...prev, { ...aiMessage, type: parsed.type, parsedData: parsed.data }]);
+      } catch (parseErr) {
+        // Regular text response
+        console.log("Regular text response");
+        setMessages((prev) => [...prev, { ...aiMessage, type: "text" }]);
+      }
+    } catch (err) {
+      console.error("Chat error:", err);
+      const errorMessage = {
         senderId: "AI",
-        message: reply,
+        message: "❌ Sorry, I encountered an error. Please check your connection and try again!",
         createdAt: new Date(),
+        type: "text"
       };
-
-      setMessages((prev) => [...prev, aiMessage]);
-    }, 1000);
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const isMyMessage = (msg) => {
-    return msg.senderId === user?.id;
+  const renderMessage = (msg) => {
+    // Handle JSON responses (diet plans, equipment)
+    if (msg.type === "diet_plan" && msg.parsedData) {
+      const plan = msg.parsedData;
+      return (
+        <div className="bg-accent/10 border border-accent/20 rounded-lg p-4 space-y-3">
+          <h3 className="text-accent font-bold text-lg">{plan.title}</h3>
+          
+          <div className="space-y-2">
+            <div className="text-sm">
+              <span className="text-dark-400">Daily Calories:</span>
+              <span className="text-white font-semibold ml-2">{plan.calories}</span>
+            </div>
+            <div className="text-sm">
+              <span className="text-dark-400">Macros:</span>
+              <span className="text-white font-semibold ml-2">{plan.macros}</span>
+            </div>
+          </div>
+
+          <div>
+            <p className="text-dark-300 text-sm font-semibold mb-2">📋 Sample Meals:</p>
+            <ul className="space-y-1">
+              {plan.meals.map((meal, idx) => (
+                <li key={idx} className="text-dark-300 text-sm">• {meal}</li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <p className="text-dark-300 text-sm font-semibold mb-2">💡 Tips:</p>
+            <ul className="space-y-1">
+              {plan.tips.map((tip, idx) => (
+                <li key={idx} className="text-dark-300 text-sm">✓ {tip}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      );
+    }
+
+    if (msg.type === "equipment" && msg.parsedData) {
+      const eq = msg.parsedData;
+      return (
+        <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 space-y-3">
+          <h3 className="text-blue-400 font-bold text-lg">{eq.title}</h3>
+          
+          <div>
+            <p className="text-dark-300 text-sm font-semibold mb-2">🛠️ Equipment List:</p>
+            <ul className="space-y-1">
+              {eq.items.map((item, idx) => (
+                <li key={idx} className="text-dark-300 text-sm">• {item}</li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="space-y-2">
+            <div className="text-sm">
+              <span className="text-dark-400">💰 Estimated Cost:</span>
+              <span className="text-white font-semibold ml-2">{eq.cost}</span>
+            </div>
+            <div className="text-sm">
+              <span className="text-dark-400">✨ Benefits:</span>
+              <span className="text-white font-semibold ml-2 block mt-1">{eq.benefits}</span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Regular text with markdown support
+    return (
+      <div className="text-dark-200 text-sm whitespace-pre-wrap break-words">
+        {msg.message.split('\n').map((line, idx) => {
+          if (line.startsWith('**') && line.endsWith('**')) {
+            return (
+              <p key={idx} className="font-bold text-white">
+                {line.replace(/\*\*/g, '')}
+              </p>
+            );
+          }
+          if (line.startsWith('✅') || line.startsWith('💡') || line.startsWith('•')) {
+            return <p key={idx} className="text-dark-300">{line}</p>;
+          }
+          return <p key={idx}>{line}</p>;
+        })}
+      </div>
+    );
   };
 
   if (!isSignedIn) {
     return (
       <div className="py-8 sm:py-12 max-w-lg mx-auto">
         <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-          <h1
-            className="text-3xl font-bold text-white mb-2"
-            style={{ fontFamily: "var(--font-heading)" }}
-          >
+          <div className="w-16 h-16 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center mb-4">
+            <span className="text-3xl">🤖</span>
+          </div>
+          <h1 className="text-3xl font-bold text-white mb-2" style={{ fontFamily: "var(--font-heading)" }}>
             GYM GENIE AI
           </h1>
-
           <p className="text-dark-400 text-sm mb-6">
-            Sign in to chat with Gym Genie AI.
+            Sign in to chat with your personal fitness AI assistant.
           </p>
-
           <a
             href="/sign-in"
             className="bg-accent hover:bg-accent-hover text-white px-6 py-2.5 rounded-lg font-semibold text-sm transition-all"
@@ -135,82 +186,68 @@ function ChatPage() {
   }
 
   return (
-    <div
-      className="py-4 sm:py-6 max-w-5xl mx-auto"
-      style={{ height: "calc(100vh - 88px)" }}
-    >
+    <div className="py-4 sm:py-6 max-w-4xl mx-auto px-4" style={{ height: "calc(100vh - 88px)" }}>
       <div className="h-full bg-surface border border-border rounded-xl flex flex-col overflow-hidden">
-        <div className="px-4 py-3 border-b border-border">
-          <h1
-            className="text-lg font-bold text-white"
-            style={{ fontFamily: "var(--font-heading)" }}
-          >
-            🤖 Gym Genie AI Assistant
+        {/* Header */}
+        <div className="px-4 py-4 border-b border-border bg-dark-900">
+          <h1 className="text-xl font-bold text-white flex items-center gap-2" style={{ fontFamily: "var(--font-heading)" }}>
+            🤖 <span>Gym Genie AI Assistant</span>
           </h1>
-
-          <p className="text-xs text-dark-500 mt-1">
-            Ask about workouts, nutrition, gym equipment, and fitness.
-          </p>
+          <p className="text-dark-400 text-xs mt-1">Your personal fitness coach powered by AI</p>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-3">
-          {messages.map((msg, i) => (
-            <div
-              key={i}
-              className={`flex ${
-                isMyMessage(msg)
-                  ? "justify-end"
-                  : "justify-start"
-              }`}
-            >
+        {/* Messages Container */}
+        <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
+          {messages.map((msg, idx) => (
+            <div key={idx} className={`flex ${msg.senderId === user?.id ? "justify-end" : "justify-start"}`}>
               <div
-                className={`max-w-[80%] sm:max-w-md px-4 py-3 text-sm ${
-                  isMyMessage(msg)
-                    ? "bg-accent text-white rounded-2xl rounded-br-md"
-                    : "bg-dark-700 text-white border border-border rounded-2xl rounded-bl-md"
+                className={`max-w-2xl px-4 py-3 rounded-xl ${
+                  msg.senderId === user?.id
+                    ? "bg-accent text-white rounded-br-none"
+                    : "bg-dark-800 text-dark-200 rounded-bl-none border border-border"
                 }`}
               >
-                <p>{msg.message}</p>
-
-                <p
-                  className={`text-[10px] mt-1 ${
-                    isMyMessage(msg)
-                      ? "text-white/60"
-                      : "text-dark-500"
-                  }`}
-                >
-                  {new Date(msg.createdAt).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </p>
+                {renderMessage(msg)}
               </div>
             </div>
           ))}
-
+          
+          {loading && (
+            <div className="flex justify-start">
+              <div className="bg-dark-800 border border-border rounded-xl rounded-bl-none px-4 py-3">
+                <div className="flex gap-2">
+                  <div className="w-2 h-2 bg-dark-500 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-dark-500 rounded-full animate-bounce" style={{ animationDelay: "0.1s" }}></div>
+                  <div className="w-2 h-2 bg-dark-500 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }}></div>
+                </div>
+              </div>
+            </div>
+          )}
+          
           <div ref={messagesEndRef} />
         </div>
 
-        <div className="p-4 border-t border-border">
+        {/* Input Area */}
+        <div className="px-4 py-4 border-t border-border bg-dark-900">
           <div className="flex gap-3">
             <input
               type="text"
-              placeholder="Ask Gym Genie AI..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) =>
-                e.key === "Enter" && sendMessage()
-              }
-              className="flex-1 bg-dark-800 border border-border rounded-lg px-4 py-3 text-white placeholder-dark-500 focus:outline-none focus:border-accent"
+              onKeyPress={(e) => e.key === "Enter" && sendMessage()}
+              placeholder="Ask about diet plans, workouts, equipment..."
+              disabled={loading}
+              className="flex-1 bg-dark-800 border border-border rounded-lg px-4 py-2.5 text-white placeholder-dark-500 focus:outline-none focus:border-accent disabled:opacity-50 text-sm"
             />
-
             <button
               onClick={sendMessage}
-              className="bg-accent hover:bg-accent-hover text-white px-6 py-3 rounded-lg font-semibold transition-all"
+              disabled={loading || !input.trim()}
+              className="bg-accent hover:bg-accent-hover text-white px-6 py-2.5 rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm"
             >
-              Send
+              {loading ? "..." : "Send"}
             </button>
           </div>
+          <p className="text-dark-500 text-xs mt-2">💡 Try asking: "diet plan for weight loss" or "home gym equipment"</p>
         </div>
       </div>
     </div>

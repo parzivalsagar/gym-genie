@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { useUser } from '@clerk/clerk-react';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../api/axios';
 
 function CartPage() {
@@ -9,19 +9,33 @@ function CartPage() {
   const [loading, setLoading] = useState(true);
   const [showOrderSuccess, setShowOrderSuccess] = useState(false);
   const [orderTotal, setOrderTotal] = useState(0);
+  const [showAddressModal, setShowAddressModal] = useState(false);
+  const [address, setAddress] = useState('');
+  const [placingOrder, setPlacingOrder] = useState(false);
 
   useEffect(() => {
-    if (!isSignedIn) {
-      setLoading(false);
-      return;
-    }
+  if (!isSignedIn) {
+    setLoading(false);
+    return;
+  }
 
-    api
-      .get('/cart')
-      .then((res) => setCart(res.data))
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [isSignedIn]);
+  // If order was placed, keep cart empty
+  if (localStorage.getItem("cartCleared") === "true") {
+    setCart({ items: [] });
+    setLoading(false);
+    return;
+  }
+
+  api
+    .get('/cart')
+    .then((res) => {
+      setCart(res.data);
+    })
+    .catch((err) => {
+      setCart({ items: [] });
+    })
+    .finally(() => setLoading(false));
+}, [isSignedIn]);
 
   const removeItem = async (productId) => {
     try {
@@ -41,10 +55,15 @@ function CartPage() {
   );
 
   const handlePlaceOrder = () => {
-    setOrderTotal(total);
-    setCart({ items: [] });
-    setShowOrderSuccess(true);
-  };
+  setOrderTotal(total);
+
+  // Clear cart permanently in frontend
+  localStorage.setItem("cartCleared", "true");
+
+  setCart({ items: [] });
+
+  setShowOrderSuccess(true);
+};
 
   if (!isSignedIn) {
     return (
@@ -196,10 +215,11 @@ function CartPage() {
               </p>
 
               <button
-                onClick={handlePlaceOrder}
-                className="w-full bg-accent hover:bg-accent-hover text-white py-3 rounded-lg font-semibold transition-all"
+                onClick={() => setShowAddressModal(true)}
+                className="w-full bg-accent hover:bg-accent-hover text-white py-3 rounded-lg font-semibold transition-all disabled:opacity-50"
+                disabled={placingOrder}
               >
-                Place Order
+                {placingOrder ? 'Placing Order...' : 'Place Order'}
               </button>
             </div>
           </div>
@@ -250,6 +270,41 @@ function CartPage() {
             >
               Continue Shopping
             </button>
+          </div>
+        </div>
+      )}
+
+      {showAddressModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+          <div className="bg-surface border border-border rounded-2xl p-8 max-w-md w-full">
+            <h2 className="text-2xl font-bold text-white mb-4">Shipping Address</h2>
+            
+            <textarea
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              placeholder="Enter your full shipping address..."
+              className="w-full bg-dark-800 border border-border rounded-lg p-3 text-white placeholder-dark-500 mb-4 focus:outline-none focus:border-accent"
+              rows="4"
+            />
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowAddressModal(false);
+                  setAddress('');
+                }}
+                className="flex-1 border border-border text-white py-2.5 rounded-lg font-semibold hover:bg-dark-800 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handlePlaceOrder}
+                disabled={placingOrder || !address.trim()}
+                className="flex-1 bg-accent hover:bg-accent-hover text-white py-2.5 rounded-lg font-semibold transition-all disabled:opacity-50"
+              >
+                {placingOrder ? 'Processing...' : 'Confirm Order'}
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -14,6 +14,7 @@ const reviewRoutes = require('./routes/reviews');
 const chatRoutes = require('./routes/chat');
 const adminRoutes = require('./routes/admin');
 const uploadRoutes = require('./routes/upload');
+const aiBotRoutes = require('./routes/ai-chatbot');
 
 const app = express();
 app.use(cors());
@@ -42,6 +43,7 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/ai', aiBotRoutes);
 
 app.post('/api/sync-user', async (req, res) => {
   try {

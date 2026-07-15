@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { useUser } from '@clerk/clerk-react';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../api/axios';
 
 function OrdersPage() {
@@ -50,6 +50,14 @@ function OrdersPage() {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
                 <span className="text-xs text-dark-500 font-mono">#{order._id.slice(-6)}</span>
                 <span className={`self-start sm:self-auto inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold uppercase tracking-wide ${order.status === 'Delivered' ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20' : order.status === 'Cancelled' ? 'bg-red/15 text-red border border-red/20' : 'bg-yellow/15 text-yellow border border-yellow/20'}`}>{order.status}</span>
+              </div>
+              <div className="mb-3 space-y-2">
+                {order.products.map((item, idx) => (
+                  <div key={`${order._id}-${idx}`} className="text-sm text-dark-300">
+                    {item.productId?.title || item.productId || 'Unknown Product'}
+                    <span className="ml-2 text-dark-500">× {item.quantity}</span>
+                  </div>
+                ))}
               </div>
               <div className="flex items-end justify-between">
                 <p className="text-xl sm:text-2xl font-bold text-accent" style={{ fontFamily: 'var(--font-heading)' }}>₹{order.totalPrice.toLocaleString('en-IN')}</p>

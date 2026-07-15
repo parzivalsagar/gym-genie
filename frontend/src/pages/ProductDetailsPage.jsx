@@ -19,6 +19,8 @@ function ProductDetailsPage() {
     try {
       await api.post('/cart/add', { productId: id, quantity: 1 });
       setMsg('Added to cart!');
+      // Dispatch custom event to refresh cart in other components
+      window.dispatchEvent(new Event('cartUpdated'));
       setTimeout(() => setMsg(''), 2500);
     } catch (err) {
       setMsg(err.response?.data?.error || 'Failed to add');

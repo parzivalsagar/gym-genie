@@ -18,7 +18,7 @@ router.get('/', optionalAuth, async (req, res) => {
   try {
     const userId = req.auth?.userId;
     if (!userId) return res.json([]);
-    const orders = await Order.find({ buyerId: userId }).populate('products.productId');
+    const orders = await Order.find({ buyerId: userId }).populate('products.productId', 'title');
     res.json(orders);
   } catch (error) {
     res.status(500).json({ error: error.message });

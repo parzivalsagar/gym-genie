@@ -19,6 +19,8 @@ function ProductDetailsPage() {
     try {
       await api.post('/cart/add', { productId: id, quantity: 1 });
       setMsg('Added to cart!');
+      // Dispatch custom event to refresh cart in other components
+      window.dispatchEvent(new Event('cartUpdated'));
       setTimeout(() => setMsg(''), 2500);
     } catch (err) {
       setMsg(err.response?.data?.error || 'Failed to add');
@@ -90,7 +92,7 @@ function ProductDetailsPage() {
             <button onClick={addToCart} disabled={loading} className="flex-1 bg-accent hover:bg-accent-hover text-white py-3 rounded-lg font-semibold text-sm transition-all shadow-lg shadow-accent/25 hover:shadow-accent/40 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
               {loading ? 'Adding...' : 'Add to Cart'}
             </button>
-            <Link to="/chat" className="flex-1 border border-border text-dark-200 py-3 rounded-lg font-semibold text-sm hover:bg-dark-700 hover:border-accent hover:text-white transition-all text-center">Contact Seller</Link>
+            
           </div>
         </div>
       </div>
